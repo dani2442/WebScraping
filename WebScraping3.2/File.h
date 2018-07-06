@@ -51,6 +51,8 @@ File::~File()
 
 inline void File::mkdir(std::string& path)
 {
+	if (isDir(path))
+		return;
 	if (std::count(path.begin(), path.end(), '/') > 0)
 		fs::create_directories(path);
 	else

@@ -24,10 +24,7 @@ public:
 	ConnectHttp();
 	~ConnectHttp();
 
-	static void Init();
-
-	std::string _Request(std::string url);
-	void RequestReadJson(std::string url, std::string &content);
+	std::string RequestReadJson(std::string url);
 	void CRequestReadJson(std::string url, char *&content);
 	void RequestWriteJson(std::string url, std::string path);
 	void RequestAddJson(std::string url, std::string path,std::string key);
@@ -50,7 +47,6 @@ bool ConnectHttp::b_init = false;
 
 ConnectHttp::ConnectHttp()
 {
-	ConnectHttp::Init();
 }
 
 ConnectHttp::~ConnectHttp()
@@ -59,7 +55,8 @@ ConnectHttp::~ConnectHttp()
 	//ConnectHttp::b_init = true;
 }
 
-inline std::string ConnectHttp::_Request(std::string url)
+
+inline std::string ConnectHttp::RequestReadJson(std::string url)
 {
 	std::string content;
 	CURL *curl = curl_easy_init();
@@ -71,18 +68,6 @@ inline std::string ConnectHttp::_Request(std::string url)
 		curl_easy_cleanup(curl);
 	}
 	return content;
-}
-
-inline void ConnectHttp::RequestReadJson(std::string url, std::string &content)
-{
-	CURL *curl = curl_easy_init();
-	if (curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Swriter);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &content);
-		curl_easy_perform(curl);
-		curl_easy_cleanup(curl);
-	}
 }
 
 inline void ConnectHttp::CRequestReadJson(std::string url, char *&content)
@@ -114,18 +99,20 @@ inline void ConnectHttp::RequestWriteJson(std::string url, std::string path)
 
 inline void ConnectHttp::RequestAddJson(std::string url, std::string path,std::string key)
 {
-	std::string snewsource;
-	RequestReadJson(url, snewsource);
+	std::string snewsource = RequestReadJson(url);
 	if (snewsource.size() < 5)
 		return;
-	char *newsource = &newsource[0u];
-	Document old,newdoc;
+	char *newsource = new char[snewsource.length()+1];
+	strcpy(newsource, snewsource.c_str());
+	Document newdoc;
 	newdoc.Parse(newsource);
+	delete[] newsource;
 	char* data = NULL;
 	if (File::read(path, data)){
+		Document old;
 		old.Parse(data);
 
-		std::string old_elem = old[old.Size() - 1][old[0][key.c_str()].GetInt()].GetString(); //////////////////////////// getstring() correct
+		std::string old_elem = old[old.Size() - 1][old[0][key.c_str()].GetInt()].GetString(); //////////////////////////// correct getstring() 
 		for (Value::ConstValueIterator itr = newdoc.Begin(); itr != newdoc.End(); ++itr) {
 			std::string name = (*itr)[key.c_str()].GetString();
 			if (name.compare(old_elem)==0){
@@ -135,23 +122,22 @@ inline void ConnectHttp::RequestAddJson(std::string url, std::string path,std::s
 		}
 
 		Document temp(&old.GetAllocator());
-		for (Value::ConstValueIterator itr = newdoc.Begin(); itr != newdoc.End(); ++itr) {
+		for (Value::ValueIterator itr = newdoc.Begin(); itr != newdoc.End(); ++itr) {
 			temp.SetArray();
 			std::cout << (*itr)["date"].GetString()<<  std::endl;
-			for (Value::ConstMemberIterator itr2 = itr->MemberBegin(); itr->MemberEnd() != itr2; ++itr2) {
-				Value d;
-				d =(Value&) (itr2->value);                             
-				temp.PushBack(d, temp.GetAllocator());
+			for (Value::MemberIterator itr2 = itr->MemberBegin(); itr->MemberEnd() != itr2; ++itr2) {                            
+				temp.PushBack(itr2->value, temp.GetAllocator());
 			}
 			old.PushBack(temp, old.GetAllocator());
 		}
-		if(temp.IsArray())temp.Clear();
+		temp.SetObject();
 
 
 		StringBuffer buffer;
 		Writer<StringBuffer> writer(buffer);
 		old.Accept(writer);
 		newsource=_strdup( buffer.GetString() );
+		old.Clear();
 	}
 	else {
 		Document translated;
@@ -159,42 +145,31 @@ inline void ConnectHttp::RequestAddJson(std::string url, std::string path,std::s
 		Document temp(&translated.GetAllocator());
 		temp.SetObject();
 		int i = 0;
-		for (Value::ConstMemberIterator itr2 = newdoc[0].MemberBegin(); newdoc[0].MemberEnd() != itr2; ++itr2) {
-			Document::StringRefType d(itr2->name.GetString());
-			temp.AddMember(d,i, temp.GetAllocator());
+		for (Value::MemberIterator itr2 = newdoc[0].MemberBegin(); newdoc[0].MemberEnd() != itr2; ++itr2) {
+			temp.AddMember(itr2->name,i, temp.GetAllocator());
 			i++;
 		}
 
 		translated.PushBack(temp, translated.GetAllocator());
-
 		
-		for (Value::ConstValueIterator itr = newdoc.Begin(); itr != newdoc.End(); ++itr) {
+		for (Value::ValueIterator itr = newdoc.Begin(); itr != newdoc.End(); ++itr) {
 			temp.SetArray();
-			for (Value::ConstMemberIterator itr2 = itr->MemberBegin(); itr->MemberEnd() != itr2; ++itr2) {
-				Value d;
-				d =(Value&) (itr2->value);                             
-				temp.PushBack(d, temp.GetAllocator());
+			for (Value::MemberIterator itr2 = itr->MemberBegin(); itr->MemberEnd() != itr2; ++itr2) {
+				temp.PushBack(itr2->value, temp.GetAllocator());
 			}
 			translated.PushBack(temp, translated.GetAllocator());
 		}
-		if(temp.IsArray())temp.Clear();
+		temp.SetObject();
 		StringBuffer buffer;
 		Writer<StringBuffer> writer(buffer);
 		translated.Accept(writer);
 		newsource=_strdup( buffer.GetString() );
-
+		translated.SetObject();
 	}
+	newdoc.Clear();
 	File::write(path,newsource);
 	delete[] newsource;
 	delete[] data; 
-}
-
-inline void ConnectHttp::Init()
-{
-	if (!ConnectHttp::b_init) {
-		curl_global_init(CURL_GLOBAL_ALL);
-		ConnectHttp::b_init = true;
-	}
 }
 
 inline size_t ConnectHttp::Swriter(char * data, size_t size, size_t nmemb, std::string *writerData)

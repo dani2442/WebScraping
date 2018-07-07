@@ -42,11 +42,11 @@ public:
 	std::string name;
 	const static std::string extension;
 private:
-	static ConnectHttp connection;
+	static ConnectHttp connect;
 	Date date;	
 };
 
-ConnectHttp TradingData::connection;
+ConnectHttp TradingData::connect;
 const std::string TradingData::extension = ".24d";
 
 TradingData::TradingData(std::string name):
@@ -93,7 +93,6 @@ TradingData::~TradingData()
 
 void TradingData::Book()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name + "Book/Book" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/book";
 
@@ -103,12 +102,11 @@ void TradingData::Book()
 
 void TradingData::Charts()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name;
 	File::mkdir(c_path);
 	//std::string c_url = ConnectHttp::URL + "chart?" + _Parameters[Parameters::SYMBOLS] + "=" + _name + "&" + _Parameters[Parameters::RANGE] + "=" + _Range[Date::__range];
 	std::string c_url = ConnectHttp::URL + name + "/chart/" + _Range[Date::__range];
-	c_path=c_path+"/Chart_Full/chart"+TradingData::extension;
+	c_path=c_path+"/Chart/chart"+TradingData::extension;
 	connect.RequestAddJson(c_url, c_path,"date");
 	time_t tempdate = Date::t_date30;
 	while (Date::t_date >tempdate) {
@@ -125,8 +123,9 @@ void TradingData::Charts()
 
 inline void TradingData::Company()
 {
-	ConnectHttp connect;
-	std::string c_path = ConnectHttp::path + name + "/Company/Company" + TradingData::extension;
+	std::string c_path = ConnectHttp::path + name + "/Company/";
+	File::mkdir(c_path);
+	c_path+="Company" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/company";
 
 	connect.RequestWriteJson(c_url, c_path);
@@ -134,7 +133,6 @@ inline void TradingData::Company()
 
 inline void TradingData::Dividends()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name + "/Dividends/Dividends" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/dividends/5y";
 
@@ -143,7 +141,6 @@ inline void TradingData::Dividends()
 
 void TradingData::Earnings()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name + "/Earnings/Earnings" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/earnings";
 
@@ -152,7 +149,6 @@ void TradingData::Earnings()
 
 void TradingData::EffectiveSpread()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name + "/EffectiveSpread";
 	File::mkdir(c_path);
 	c_path+="/EffectiveSpread" + TradingData::extension;
@@ -163,7 +159,6 @@ void TradingData::EffectiveSpread()
 
 inline void TradingData::Financials()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name + "/Financials";
 	File::mkdir(c_path);
 	c_path+="/Financials" + TradingData::extension;
@@ -174,8 +169,9 @@ inline void TradingData::Financials()
 
 inline void TradingData::KeyStats()
 {
-	ConnectHttp connect;
-	std::string c_path = ConnectHttp::path + name + "/Stats/Stats" + TradingData::extension;
+	std::string c_path = ConnectHttp::path + name + "/Stats/";
+	File::mkdir(c_path);
+	c_path+="Stats" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/stats";
 
 	connect.RequestWriteJson(c_url, c_path);
@@ -183,8 +179,9 @@ inline void TradingData::KeyStats()
 
 inline void TradingData::LargestTrades()
 {
-	ConnectHttp connect;
-	std::string c_path = ConnectHttp::path + name + "/LargestTrades/LargestTrades" + TradingData::extension;
+	std::string c_path = ConnectHttp::path + name + "/LargestTrades/";
+	File::mkdir(c_path);
+	c_path+="LargestTrades" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/largest-trades";
 
 	connect.RequestWriteJson(c_url, c_path);
@@ -192,33 +189,26 @@ inline void TradingData::LargestTrades()
 
 inline void TradingData::List()
 {
-	ConnectHttp connect;
+	std::string c_path = ConnectHttp::path + name + "/List/";
+	std::string c_url = ConnectHttp::URL + name;
+	File::mkdir(c_path);
 
-	std::string c_path = ConnectHttp::path + name + "/List/MostActive" + TradingData::extension;
-	std::string c_url = ConnectHttp::URL + name + "/mostactive";
-	connect.RequestWriteJson(c_url, c_path);
+	connect.RequestWriteJson(c_url + "/mostactive", c_path+"MostActive" + TradingData::extension);
 
-	c_path = ConnectHttp::path + name + "/List/Gainers" + TradingData::extension;
-	c_url = ConnectHttp::URL + name + "/gainers";
-	connect.RequestWriteJson(c_url, c_path);
+	connect.RequestWriteJson(c_url + "/gainers", c_path + "Gainers" + TradingData::extension);
 
-	c_path = ConnectHttp::path + name + "/List/Losers" + TradingData::extension;
-	c_url = ConnectHttp::URL + name + "/losers";
-	connect.RequestWriteJson(c_url, c_path);
+	connect.RequestWriteJson(c_url + "/losers", c_path + "Losers" + TradingData::extension);
 
-	c_path = ConnectHttp::path + name + "/List/iexVolume" + TradingData::extension;
-	c_url = ConnectHttp::URL + name + "/iexvolume";
-	connect.RequestWriteJson(c_url, c_path);
+	connect.RequestWriteJson(c_url + "/iexvolume", c_path + "iexVolume" + TradingData::extension);
 
-	c_path = ConnectHttp::path + name + "List/iexpercent" + TradingData::extension;
-	c_url = ConnectHttp::URL + name + "/iexpercent";
-	connect.RequestWriteJson(c_url, c_path);
+	connect.RequestWriteJson(c_url+"/iexpercent", c_path+"iexpercent" + TradingData::extension);
 }
 
 inline void TradingData::Logo()
 {
-	ConnectHttp connect;
-	std::string c_path = ConnectHttp::path + name + "/Logo/Logo" + TradingData::extension;
+	std::string c_path = ConnectHttp::path + name + "/Logo";
+	File::mkdir(c_path);
+	c_path+="/Logo" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/logo";
 
 	connect.RequestWriteJson(c_url, c_path);
@@ -226,7 +216,6 @@ inline void TradingData::Logo()
 
 inline void TradingData::News()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name + "/News/News" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/news/last/500";
 
@@ -235,7 +224,6 @@ inline void TradingData::News()
 
 inline void TradingData::OHLC()
 {
-	ConnectHttp connect;
 	std::string c_path = ConnectHttp::path + name + "/OHLC/OHLC" + TradingData::extension;
 	std::string c_url = ConnectHttp::URL + name + "/ohcl";
 

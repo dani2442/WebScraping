@@ -187,7 +187,6 @@ inline size_t ConnectHttp::Fwriter(void *ptr, size_t size, size_t nmemb, FILE * 
 {
 	size_t written;
     written = fwrite(ptr, size, nmemb, stream);
-	fclose(stream);
     return written;
 }
 

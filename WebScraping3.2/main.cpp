@@ -5,6 +5,6 @@
 
 int main(int argc, wchar_t* argv[]) {
 	TradingData TD("aapl");
-	getchar();
+	TD.EXECUTE();
 	return 1;
 }

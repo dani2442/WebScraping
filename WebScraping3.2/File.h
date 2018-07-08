@@ -41,6 +41,8 @@ private:
 	static struct stat info;
 };
 
+struct stat File::info;
+
 File::File()
 {
 }

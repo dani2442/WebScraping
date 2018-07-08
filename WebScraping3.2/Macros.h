@@ -1,4 +1,5 @@
 #pragma once
+const static std::string EXT = ".24d";
 
 // Batch Requests
 const char *Types[]= { 

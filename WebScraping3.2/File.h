@@ -78,7 +78,7 @@ inline bool File::isFile(std::string& path)
 inline bool File::isDir(std::string& path)
 {
 	if (stat(path.c_str(), &info) != 0) {
-		std::cout << "cannot access";
+		std::cout << "cannot access: "<<path <<std::endl;
 		return false;
 	}
 	else if (info.st_mode & S_IFDIR)

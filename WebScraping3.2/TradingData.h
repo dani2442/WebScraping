@@ -79,7 +79,8 @@ private:
 		&TradingData::S_Previous
 	};
 	
-	
+	void dayChart(time_t tempdate);
+
 	std::thread p_thread[N_FUNCTIONS];
 	static ConnectHttp connect;
 	Date date;	
@@ -91,7 +92,9 @@ TradingData::TradingData(std::string name):
 	name(name),
 	date()
 {
-	std::string Company_path = ConnectHttp::path + name;
+	std::string Company_path = ConnectHttp::path; 
+	File::mkdir(Company_path);
+	Company_path+=name;
 	File::mkdir(Company_path);
 }
 
@@ -109,7 +112,7 @@ void TradingData::Book()
 	std::string c_url = ConnectHttp::URL + name + "/book";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
-
+	std::cout << "Book: status{finished}\n";
 }
 
 void TradingData::Charts()
@@ -119,18 +122,22 @@ void TradingData::Charts()
 	File::mkdir(c_path);
 	//std::string c_url = ConnectHttp::URL + "chart?" + _Parameters[Parameters::SYMBOLS] + "=" + _name + "&" + _Parameters[Parameters::RANGE] + "=" + _Range[Date::__range];
 	std::string c_url = ConnectHttp::URL + name + "/chart/" + _Range[Date::__range];
-	c_path=c_path+"/Chart/chart"+EXT;
+	c_path = c_path + "/Chart";
+	File::mkdir(c_path);
+	c_path+="/chart"+EXT;
 	connect.RequestAddJson(c_url, c_path,"date");
+
+	c_path = ConnectHttp::path + name +"/Chart_1d";
+	File::mkdir(c_path);
 	time_t tempdate = Date::t_date30;
+	std::vector<std::thread> t;
 	while (Date::t_date >tempdate) {
-		tm* temp = localtime(&tempdate);
-		std::stringstream mon;mon << std::setfill('0') << std::setw(2) << temp->tm_mon;
-		std::stringstream day;day << std::setfill('0') << std::setw(2) << temp->tm_mday;
-		std::string s_date(std::to_string(temp->tm_year + 1900) + mon.str() + day.str());
-		std::string c_url = ConnectHttp::URL + name + "/chart/date/" + s_date;
-		std::string c_path = ConnectHttp::path + name +"/Chart_1d/" +s_date+EXT;
-		connect.RequestAddJson(c_url, c_path, "minute");
+		t.push_back(std::thread(&TradingData::dayChart, this,tempdate));
 		tempdate += i_Range2;
+	}
+	std::cout << "Charts: status{finished}\n";
+	for (int i = 0; i < t.size();i++) {
+		t[i].join();
 	}
 }
 
@@ -143,6 +150,7 @@ inline void TradingData::Company()
 	std::string c_url = ConnectHttp::URL + name + "/company";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Company: status{finished}\n";
 }
 
 inline void TradingData::Dividends()
@@ -154,6 +162,7 @@ inline void TradingData::Dividends()
 	std::string c_url = ConnectHttp::URL + name + "/dividends/5y";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Dividends: status{finished}\n";
 }
 
 void TradingData::Earnings()
@@ -165,6 +174,7 @@ void TradingData::Earnings()
 	std::string c_url = ConnectHttp::URL + name + "/earnings";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Earnings: status{finished}\n";
 }
 
 void TradingData::EffectiveSpread()
@@ -176,6 +186,7 @@ void TradingData::EffectiveSpread()
 	std::string c_url = ConnectHttp::URL + name + "/effective-spread";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "EffectiveSpread: status{finished}\n";
 }
 
 inline void TradingData::Financials()
@@ -187,6 +198,7 @@ inline void TradingData::Financials()
 	std::string c_url = ConnectHttp::URL + name + "/finacials";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Financials: status{finished}\n";
 }
 
 inline void TradingData::KeyStats()
@@ -198,6 +210,7 @@ inline void TradingData::KeyStats()
 	std::string c_url = ConnectHttp::URL + name + "/stats";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "KeyStats: status{finished}\n";
 }
 
 inline void TradingData::LargestTrades()
@@ -209,6 +222,7 @@ inline void TradingData::LargestTrades()
 	std::string c_url = ConnectHttp::URL + name + "/largest-trades";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "LargestTrades: status{finished}\n";
 }
 
 inline void TradingData::List()
@@ -227,6 +241,7 @@ inline void TradingData::List()
 	connect.RequestWriteJson(c_url + "/iexvolume", c_path + "iexVolume" + EXT);
 
 	connect.RequestWriteJson(c_url + "/iexpercent", c_path + "iexpercent" + EXT);
+	std::cout << "List: status{finished}\n";
 }
 
 inline void TradingData::Logo()
@@ -238,6 +253,7 @@ inline void TradingData::Logo()
 	std::string c_url = ConnectHttp::URL + name + "/logo";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Logo: status{finished}\n";
 }
 
 inline void TradingData::News()
@@ -249,6 +265,7 @@ inline void TradingData::News()
 	std::string c_url = ConnectHttp::URL + name + "/news/last/500";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "News: status{finished}\n";
 }
 
 inline void TradingData::OHLC()
@@ -260,6 +277,7 @@ inline void TradingData::OHLC()
 	std::string c_url = ConnectHttp::URL + name + "/ohcl";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "OHLC: status{finished}\n";
 }
 
 inline void TradingData::Peers()
@@ -271,6 +289,7 @@ inline void TradingData::Peers()
 	std::string c_url = ConnectHttp::URL + name + "/peers";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Peers: status{finished}\n";
 }
 
 inline void TradingData::Previous()
@@ -282,6 +301,7 @@ inline void TradingData::Previous()
 	std::string c_url = ConnectHttp::URL + name + "/previous";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Previous: status{finished}\n";
 }
 
 inline void TradingData::Price()
@@ -293,6 +313,7 @@ inline void TradingData::Price()
 	std::string c_url = ConnectHttp::URL + name + "/price";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Price: status{finished}\n";
 }
 
 inline void TradingData::Quote()
@@ -304,6 +325,7 @@ inline void TradingData::Quote()
 	std::string c_url = ConnectHttp::URL + name + "/quote";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Quote: status{finished}\n";
 }
 
 inline void TradingData::Relevant()
@@ -315,6 +337,7 @@ inline void TradingData::Relevant()
 	std::string c_url = ConnectHttp::URL + name + "/relevant";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Relevant: status{finished}\n";
 }
 
 inline void TradingData::Splits()
@@ -326,6 +349,7 @@ inline void TradingData::Splits()
 	std::string c_url = ConnectHttp::URL + name + "/splits/5y";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "Splits: status{finished}\n";
 }
 
 inline void TradingData::TimeSeries()
@@ -337,6 +361,7 @@ inline void TradingData::TimeSeries()
 	std::string c_url = ConnectHttp::URL + name + "/time-series";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "TimeSeries: status{finished}\n";
 }
 
 inline void TradingData::VolumeByVenue()
@@ -348,6 +373,7 @@ inline void TradingData::VolumeByVenue()
 	std::string c_url = ConnectHttp::URL + name + "/volume-by-venue";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "VolumeByVenue: status{finished}\n";
 }
 
 inline void TradingData::S_Previous()
@@ -359,6 +385,7 @@ inline void TradingData::S_Previous()
 	std::string c_url = ConnectHttp::URL + "market/previous";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "S_Previous: status{finished}\n";
 }
 
 inline void TradingData::S_Symbols()
@@ -367,9 +394,21 @@ inline void TradingData::S_Symbols()
 	std::string c_path = ConnectHttp::path + "Symbols";
 	File::mkdir(c_path);
 	c_path+="/Symbols" + EXT;
-	std::string c_url = ConnectHttp::URL + "ref-data/symbols";
+	std::string c_url = "https://api.iextrading.com/1.0/ref-data/symbols";
 	if(overwrite||!File::isFile(c_path))
 	connect.RequestWriteJson(c_url, c_path);
+	std::cout << "S_Symbols: status{finished}\n";
+}
+
+inline void TradingData::dayChart(time_t tempdate)
+{
+	tm* temp = localtime(&tempdate);
+	std::stringstream mon;mon << std::setfill('0') << std::setw(2) << temp->tm_mon;
+	std::stringstream day;day << std::setfill('0') << std::setw(2) << temp->tm_mday;
+	std::string s_date(std::to_string(temp->tm_year + 1900) + mon.str() + day.str());
+	std::string c_url = ConnectHttp::URL + name + "/chart/date/" + s_date;
+	std::string c_path = ConnectHttp::path + name +"/Chart_1d/" +s_date+EXT;
+	connect.RequestAddJson(c_url, c_path, "minute");
 }
 
 inline void TradingData::EXECUTE()

@@ -87,6 +87,9 @@ inline std::string Date::Parse(tm * date)
 
 inline void Date::InitLastDate()
 {
+	// Check whether exists dir path and creates it
+	std::string dir = ConnectHttp::path + "/_help";
+	File::mkdir(dir);
 	std::ifstream f(d_path.c_str());
 	if (!f.fail())
 	{
